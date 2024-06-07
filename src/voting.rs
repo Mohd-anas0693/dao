@@ -5,10 +5,9 @@
 // accept votes from callers with proof of member_tokens
 // deposit vote_tokens into vault corresponding to vote_option @ vote_tokens * number_member_tokens held
 
-
 use scrypto::prelude::*;
 
-blueprint! { 
+blueprint! {
  struct Voting {
     admin_badge_vault: Vault,
     // vaults collection for constructing ballot vaults
@@ -32,7 +31,7 @@ blueprint! {
           .metadata("name", "Vote Token")
           .metadata("symbol", "Vote")
           .initial_supply(total_shares);
-     
+
 
       Self {
      admin_badge_vault: Vault::with_bucket(admin_badge),
@@ -44,11 +43,25 @@ blueprint! {
      .globalize()
    }
 
-  //  general DAO ballot mechanism for initiatives voted on my all members 1share = 1vote
-   pub fn create_ballot(&mut self, _ballot_options: HashMap<String,String>) {
-     // iterate over ballot_options and create a vault/toke pair for each option
-    //  ballot_options structure -> key:option_name,value:options_descritption
-  }
+   pub fn create_ballot(&mut self, _ballot_options: HashMap<String, String>) {
+    // Iterate over ballot_options and create a vault/token pair for each option
+       // Iterate over ballot_options and create a vault/token pair for each option
+    for (option_name, option_description) in _ballot_options {
+        let ballot_resource = ResourceBuilder::new_fungible()
+            .divisibility(DIVISIBILITY_NONE)
+            .metadata("name", &option_name)
+            .metadata("description", &option_description)
+            .initial_supply(0); // Initialize with zero tokens
+        
+        let ballot_address = ballot_resource.resource_address(); // Get the resource address
+
+        // Create the vault with the resource address
+        let ballot_vault = Vault::new(ballot_address);
+
+        // Insert the vault into the vaults HashMap
+        self.vaults.insert(ballot_address, ballot_vault);
+    }
+}
 
 // require proof of voters badge --> include num_member_tokens for weighted votes/delegate voters
    pub fn operators_vote(_ballot_name: String, _vote: String, _num_votes: u32) {
@@ -75,7 +88,7 @@ blueprint! {
    pub fn simple_nft_vote() {
     // construct simple list ballot + config num of options that can be selected
     // mint nft with ballot selections and deposit into nft_proposals_vault
-    // voter must present proof of required badge, ie. members badge, delegate badge or other acceptable badge.    
+    // voter must present proof of required badge, ie. members badge, delegate badge or other acceptable badge.
    }
 
  }
